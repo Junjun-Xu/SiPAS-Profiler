@@ -1,4 +1,6 @@
-<img src="https://www.dropbox.com/s/k9wxvebpe5jggp1/Slide1.png?raw=1" height=200 align="center"> 
+<img src="https://www.dropbox.com/s/k9wxvebpe5jggp1/Slide1.png?raw=1" height=300 align="center"> 
+
+
 # SiPAS-Profiler
  
 ## Authors
@@ -16,11 +18,11 @@ To sum up, it is has three significant improvement:
 
      2. Even in plants, it can achieve self-stability under the low sampling reads number.
 
-     3. When sampling data number reduces to one tenth, high accuracy can be also verfied by Truseq. 
+     3. When sampling data number reduces to one tenth of Truseq, high accuracy can be also verfied. 
      
      
      
-At the same time, we launch the corresponding pipeline which can achieve analysis through one click. Using raw of RNA-seq, gene expression table of a large population can be get immediatly.
+At the same time, we launch the corresponding pipeline which can achieve analysis through one click. Using raw RNA-seq data, gene expression table of a large population sisze can get immediately.
  
  #### Basic Workflow
  
@@ -42,14 +44,14 @@ At the same time, we launch the corresponding pipeline which can achieve analysi
  
  #### Options
  
- T0 start your analysis, you need to provide some parameter files. There also some options you can choose.
+ To start your analysis, you need to provide some parameter files. There also some options you can choose.
  
  #####  1.Parameter File
  
  ```sh
 SiPAS-Profiler (SPR)
 Author: Jun Xu, Fei Lu
-Email: junxu1048@genetic.ac.cn; flu@genetics.ac.cn
+Email: junxu1048@genetic.ac.cn;flu@genetics.ac.cn
 Homepage: http://plantgeneticslab.weebly.com/
 #This program is used to profile 3'RNA-seq experiment, to quantify expression level of genes.
 #The usage is java -Xms10g -Xmx20g TEP.jar parameters_TEP.txt > log.txt &
@@ -60,8 +62,8 @@ PE
 /home/genome
 #The SampleInformation file (with header), the format is Taxa\tBarcode\tPlateName\tFastqPath 
 /home/SampleInformation.txt
-#The gene annotation file (GTF format)
-/home/Zea_mays.AGPv4.38.modified.gtf
+#The gene annotation file (GTF format or GFF format)
+/home/wheat_v1.0_Lulab.gff3
 #The path of STAR alignment software
 /home/software/STAR-2.5.3a/bin/MacOSX_x86_64/STAR
 #The directory of output
