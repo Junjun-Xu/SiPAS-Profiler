@@ -1,8 +1,4 @@
-
-
-<img src="https://www.dropbox.com/s/rjtjfyil8cdjc4z/logo.pdf?raw=1" height=200 align="center"> 
-
-
+<img src="https://www.dropbox.com/s/k9wxvebpe5jggp1/Slide1.png?raw=1" height=200 align="center"> 
 # SiPAS-Profiler
  
 ## Authors
