@@ -23,6 +23,8 @@ To sum up, it is has three significant improvement:
      
      
 At the same time, we launch the corresponding pipeline which can achieve analysis through one click. Using raw RNA-seq data, gene expression table of a large population sisze can get immediately.
+
+
  
  #### Basic Workflow
  
@@ -30,19 +32,31 @@ At the same time, we launch the corresponding pipeline which can achieve analysi
 1. Parse samples
 ```
 ```sh
-2. Align to genome
+2. Make index of reference
 ```
 ```sh
-3. Quantitate gene expression
+3. Align to genome
 ```
 ```sh
-4. Output count table
+4. Quantitate gene expression
+```
+```sh
+5. Output count table
 ```
  
  
+ ### Dependence
+
+#### Software
+
+```sh
+STAR
+```
+```sh
+HTSeq
+```
  
- 
- #### Options
+ #### Files
  
  To start your analysis, you need to provide some parameter files. There also some options you can choose.
  
@@ -58,16 +72,24 @@ Homepage: http://plantgeneticslab.weebly.com/
 #Please keep the order of following parameters
 #The mode of alignment. PE or SE. The default is PE mode
 PE
+#The multimap number.If the value is 10. It means that if the read map to more than 10 position, it will be discarded. Default is 2.
+2
+#The mismatch rate number. If this value is more than set value, this read will be discard.Defult is 0.1.
+0.1
+#The minimun number of match. 
+80
+#The directory of output
+/home/outputDirS
+#The gene annotation file (GTF format)
+/home/wheat.gff
+#The gene reference file (fa format)
+/home/wheat.fa
+#The path of STAR alignment software
+/home/STAR-2.6.1c/bin/Linux_x86_64
 #The directory of reference genome index
 /home/genome
 #The SampleInformation file (with header), the format is Taxa\tBarcode\tPlateName\tFastqPath 
 /home/SampleInformation.txt
-#The gene annotation file (GTF format or GFF format)
-/home/wheat_v1.0_Lulab.gff3
-#The path of STAR alignment software
-/home/software/STAR-2.5.3a/bin/MacOSX_x86_64/STAR
-#The directory of output
-/home/outputDir
 ```
 
 ##### 2.Sample Information File
