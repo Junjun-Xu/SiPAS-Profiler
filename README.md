@@ -1,13 +1,13 @@
 
 
-<img src="https://www.dropbox.com/s/rjtjfyil8cdjc4z/logo.pdf?dl=0" height=200 align="center"> 
+<img src="https://www.dropbox.com/s/rjtjfyil8cdjc4z/logo.pdf?raw=1" height=200 align="center"> 
 
 
 # SiPAS-Profiler
  
 ## Authors
 
-Jun Xu (junxu1048@genetics.ac.cn)<sup> 1,2 </sup>, Jing Wang (jing.wang@genetics.ac.cn)1, Fei Lu (flu@genetics.ac.cn)1,3
+Jun Xu (junxu1048@genetics.ac.cn)<sup> 1,2 </sup>, Jing Wang (jing.wang@genetics.ac.cn)<sup> 1 </sup>, Fei Lu (flu@genetics.ac.cn)<sup> 1,3 </sup>
 
 ## Overview
 
