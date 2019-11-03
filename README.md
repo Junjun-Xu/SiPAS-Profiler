@@ -122,7 +122,10 @@ PL_BC24	TTGGAAAC	Plate24	/Users/xujun/Desktop/TEP/fastq/s1116-1-L2_1.clean.fq
 
 ### Additional Features
 
-When we construct libraries in HTS plate, the uneven output of libraries often occurs. In order to get the relatively consistent library output, the test data is usually used to assist. The result is as a reference to guide the large-scale sequencing. We complete a new pipeline to parse the information in the data. The following are the statistical results.
+#### testInfor.jar
+
+##### Result
+When we construct libraries in HTS plate, the uneven output of libraries often occurs. In order to get the relatively consistent library output, the test data is usually used to assist. The result is as a reference to guide the large-scale sequencing. The testInfor.jar file is a new pipeline to parse the information in the data. The following are the statistical results.
 
 
 ##### 1.ratioTable.txt
@@ -201,3 +204,9 @@ library	clean data(Gbase)	raw data(Gbase)
 20190724S2-13	850248600	913733100	
 ```
 
+##### Usage
+
+The use of pipeline is also very simple. For example:
+java -jar testInfor.jar /Users/home/barcode.txt /Users/home/inputFileDirS
+
+The first parameter "/Users/home/barcode.txt" is the path of barcode file which is used to parse samples and print this information in ratioTable.txt file. The second is the the path of the input directory. Under this directory, it must contain the folder of Rawdata and Cleandata which are both needed in the following analysis.
