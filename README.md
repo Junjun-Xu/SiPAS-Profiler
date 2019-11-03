@@ -207,6 +207,12 @@ library	clean data(Gbase)	raw data(Gbase)
 ##### Usage
 
 The use of pipeline is also very simple. For example:
+
 java -jar testInfor.jar /Users/home/barcode.txt /Users/home/inputFileDirS
 
 The first parameter "/Users/home/barcode.txt" is the path of barcode file which is used to parse samples and print this information in ratioTable.txt file. The second is the the path of the input directory. Under this directory, it must contain the folder of Rawdata and Cleandata which are both needed in the following analysis.
+
+##### Note
+
+The generated files will not be used for subsequent analysis. So all intermediate files will be deleted at the end, leaving only the final result file.
+
