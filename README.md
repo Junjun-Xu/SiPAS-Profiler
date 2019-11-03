@@ -22,10 +22,9 @@ To sum up, it is has three significant improvement:
      
      
      
-At the same time, we launch the corresponding pipeline which can achieve analysis through one click. Using raw RNA-seq data, gene expression table of a large population sisze can get immediately.
+At the same time, we launch the corresponding pipeline which can achieve analysis through one click. Using raw RNA-seq data, gene expression table of a large population size can get immediately.
 
 
- 
  #### Basic Workflow
  
 ```sh
@@ -119,5 +118,86 @@ PL_BC21	CGCGAATC	Plate21	/Users/xujun/Desktop/TEP/fastq/s1116-1-L2_1.clean.fq
 PL_BC22	TAGAGATC	Plate22	/Users/xujun/Desktop/TEP/fastq/s1116-1-L2_1.clean.fq
 PL_BC23	CCCAAACA	Plate23	/Users/xujun/Desktop/TEP/fastq/s1116-1-L2_1.clean.fq
 PL_BC24	TTGGAAAC	Plate24	/Users/xujun/Desktop/TEP/fastq/s1116-1-L2_1.clean.fq
+```
+
+### Additional Features
+
+When we construct libraries in HTS plate, the uneven output of libraries often occurs. In order to get the relatively consistent library output, the test data is usually used to assist. The result is as a reference to guide the large-scale sequencing. We complete a new pipeline to parse the information in the data. The following are the statistical results.
+
+
+##### 1.ratioTable.txt
+
+From this file you can get the reads number, barcode of each sample (Rawdata) and the degree of uniformity between samples in library. This can be as the conduct for sample mixing within the library.
+
+```sh
+20190724S1-1	Barcode	Reads number	Ratio
+A01	TGAACACG	809092	2.38%
+A02	CGTTGTCA	742120	2.18%
+A03	TGAATCAG	745732	2.19%
+A04	TTCGACTG	288972	0.85%
+A05	CTTAGTTG	461020	1.36%
+A06	CGTGCTGA	393824	1.16%
+A07	CCTCAAGC	77632	0.23%
+A08	TGAGGACT	25560	0.08%
+A09	CGCGTTAT	634040	1.86%
+A10	CGTTTCAT	278692	0.82%
+A11	GCATAGTC	241788	0.71%
+A12	TGGCTCTA	140692	0.41%
+B01	CAAGGAAG	188628	0.55%
+B02	CAGTACCT	372328	1.09%
+B03	CGACTTGT	840972	2.47%
+B04	ATGCCTCA	379772	1.12%
+B05	TCTCAGAA	324532	0.95%
+B06	CTTCGTCT	388492	1.14%
+B07	TTCACATG	68348	0.20%
+B08	AAAGCGAG	36428	0.11%
+B09	CGCGAATC	394444	1.16%
+B10	TAGAGATC	423768	1.25%
+B11	CCCAAACA	766728	2.25%
+B12	TTGGAAAC	177076	0.52%
+```
+##### 2.baseTable.txt
+
+Visually view the amount of data from the size of the file.
+```sh
+20190724S1-1	Reads number	Base	Mbase
+A01	809092	242727600	81
+A02	742120	222636000	65
+A03	745732	223719600	65
+A04	288972	86691600	26
+A05	461020	138306000	41
+A06	393824	118147200	35
+A07	77632	23289600	8
+A08	25560	7668000	4
+A09	634040	190212000	55
+A10	278692	83607600	25
+A11	241788	72536400	22
+A12	140692	42207600	13
+B01	188628	56588400	18
+B02	372328	111698400	33
+B03	840972	252291600	81
+B04	379772	113931600	34
+B05	324532	97359600	29
+B06	388492	116547600	35
+B07	68348	20504400	7
+B08	36428	10928400	5
+B09	394444	118333200	35
+B10	423768	127130400	38
+B11	766728	230018400	81
+B12	177076	53122800	17
+```
+##### 3.libraryOutput.txt
+
+It can be used as an important basis for library mixing.
+```sh
+library	clean data(Gbase)	raw data(Gbase)
+20190724S1-1	791483100	839794800	
+20190724S1-2	916298400	987440100	
+20190724S1-4	795152400	862199400	
+20190724S1-5	817035000	868636200	
+20190724S1-6	1659344400	1770141600	
+20190724S2-10	659848500	715755000	
+20190724S2-11	680722200	726794100	
+20190724S2-13	850248600	913733100	
 ```
 
