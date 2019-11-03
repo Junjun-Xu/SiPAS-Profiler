@@ -279,8 +279,10 @@ public class SiPASProfile {
             String infile1 = new File (subFqDirS, f+"_R1.fq").getAbsolutePath();
             String infile2 = new File (subFqDirS, f+"_R2.fq").getAbsolutePath();
             StringBuilder sb = new StringBuilder();
-            sb.append(this.starPath).append(" --runThreadN ").append(numCores).append(" --genomeDir ").append(this.referenceGenomeFileS);
+            sb.append(this.starPath).append(" --runThreadN ").append(numCores);
+            sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
             sb.append(" --sjdbGTFfile ").append(this.geneAnnotationFileS);
+            sb.append(" --genomeLoad LoadAndKeep");
             sb.append(" --readFilesIn ").append(infile1+" "+infile2);
             sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f.getName().replaceFirst(".fq", ""))
                 .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
@@ -323,8 +325,10 @@ public class SiPASProfile {
         int numCores = Runtime.getRuntime().availableProcessors();
         fList.stream().forEach(f -> {
             StringBuilder sb = new StringBuilder();
-            sb.append(this.starPath).append(" --runThreadN ").append(numCores).append(" --genomeDir ").append(this.referenceGenomeFileS);
+            sb.append(this.starPath).append(" --runThreadN ").append(numCores);
+            sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
             sb.append(" --sjdbGTFfile ").append(this.geneAnnotationFileS);
+            sb.append(" --genomeLoad LoadAndKeep");
             sb.append(" --readFilesIn ").append(f);
             sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f.getName().replaceFirst(".fq", ""))
                 .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
