@@ -5,7 +5,7 @@
  
 ## Authors
 
-Jun Xu (junxu1048@genetics.ac.cn)<sup> 1,2 </sup>, Jing Wang (jing.wang@genetics.ac.cn)<sup> 1 </sup>, Fei Lu (flu@genetics.ac.cn)<sup> 1,3 </sup>
+Jun Xu (junxu1048@genetics.ac.cn)<sup> 1,2 </sup>, Fei Lu (flu@genetics.ac.cn)<sup> 1,3 </sup>
 
 ## Overview
 
