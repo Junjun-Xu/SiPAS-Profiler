@@ -7,6 +7,14 @@
 
 Jun Xu (junxu1048@genetics.ac.cn)<sup> 1,2 </sup>, Fei Lu (flu@genetics.ac.cn)<sup> 1,3 </sup>
 
+## Affiliations
+
+<sup> 1 </sup>  State Key Laboratory of Plant Cell and Chromosome Engineering , Institute of Genetics and Developmental Biology, The Innovative Academy of Seed Design, Chinese Academy of Sciences
+ 
+<sup> 2 </sup>  University of Chinese Academy of Sciences
+
+<sup> 3 </sup>  CAS-JIC Centre of Excellence for Plant and Microbial Science (CEPAMS), Shanghai Institutes for Biological Sciences, Chinese Academy of Sciences
+
 ## Overview
 
 Simplified Poly(A) Anchored Sequencing (SiPAS) is a custom 3'RNA-seq method to enhance population transcriptomic studies in plants. Just as the full name of this technology, SiPAS simplify the current tech which are successful in gauging gene expression in cultivated mammal cells. That means the hinders caused by cell wall and complex genome in pants can be solved perfectly.
