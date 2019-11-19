@@ -170,7 +170,7 @@ public class SiPASProfile {
         long startTimePoint = System.nanoTime();
         fqFileSListR1.stream().forEach(f -> {
             int fqIndex = Collections.binarySearch(this.fqFileSListR1, f);
-            String subFqDirS = new File (this.outputDirS).getAbsolutePath();
+            String subFqDirS = new File (this.outputDirS,subDirS[0]).getAbsolutePath();
             List<String> barcodeList = barcodeLists[fqIndex];
             String[] subFqFileS = new String[barcodeList.size()];
             HashMap<String, String> btMap = barcodeTaxaMaps[fqIndex];
@@ -284,26 +284,30 @@ public class SiPASProfile {
         File[] fs = new File(subFqDirS).listFiles();
         List<File> fList = new ArrayList(Arrays.asList());
         fs = IOUtils.listFilesEndsWith(fs, ".fq");
-        for(int i=0;i<fs.length;i++){
-            if (fs[i].length() < 6_500_000) continue; // Assume 19,000 genes expressed with 1X coverage, to ignore low-quality sample
-            fList.add(fs[i]);
+        HashSet<String> nameSet = new HashSet();
+        for (int i = 0; i < fs.length; i++) {
+            if (fs[i].isHidden()) continue;
+            nameSet.add(fs[i].getName().replace(fs[i].getName().split("_")[2],""));
         }
         int numCores = Runtime.getRuntime().availableProcessors();
-        fList.stream().forEach(f -> {
-            String infile1 = new File (subFqDirS, f+"_R1.fq").getAbsolutePath();
-            String infile2 = new File (subFqDirS, f+"_R2.fq").getAbsolutePath();
+        nameSet.stream().forEach(f ->{
+            String infile1 = new File (subFqDirS,f+"R1.fq").getAbsolutePath();
+            String infile2 = new File (subFqDirS,f+"R2.fq").getAbsolutePath();
             StringBuilder sb = new StringBuilder();
             sb.append(this.starPath).append(" --runThreadN ").append(numCores);
             sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
             sb.append(" --sjdbGTFfile ").append(this.geneAnnotationFileS);
+            sb.append(" --genomeChrBinNbits  17");
+            sb.append(" --genomeSAsparseD 2");
             sb.append(" --genomeLoad LoadAndKeep");
             sb.append(" --readFilesIn ").append(infile1+" "+infile2);
-            sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f.getName().replaceFirst(".fq", ""))
+            sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
                 .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
             sb.append(" --outFilterMismatchNoverLmax ").append(this.mismatchRate)
                 .append(" --outFilterIntronMotifs RemoveNoncanonicalUnannotated ");
             sb.append(" --outSAMtype SAM");
             sb.append(" --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin ").append(this.minNMatch);
+            sb.append(" --limitGenomeGenerateRAM 40000000000");
             String command = sb.toString();
             System.out.println(command);
             try {
@@ -319,10 +323,9 @@ public class SiPASProfile {
             catch (Exception e) {
                 e.printStackTrace();
             }
-            System.out.println("Finished"+f);
+            System.out.println("Finished "+f);
         });
         StringBuilder time = new StringBuilder();
-        time.append("Distinguish samples according to barcode and trim the barcode.").append("Took ").append(Benchmark.getTimeSpanSeconds(startTimePoint)).append(" seconds. Memory used: ").append(Benchmark.getUsedMemoryGb()).append(" Gb");
         System.out.println(time.toString());
         
     }
@@ -332,19 +335,23 @@ public class SiPASProfile {
         File[] fs = new File(subFqDirS).listFiles();
         List<File> fList = new ArrayList(Arrays.asList());
         fs = IOUtils.listFilesEndsWith(fs, ".fq");
-        for(int i=0;i<fs.length;i++){
-            if (fs[i].length() < 6_500_000) continue; // Assume 19,000 genes expressed with 1X coverage, to ignore low-quality sample
-            fList.add(fs[i]);
+        HashSet<String> nameSet = new HashSet();
+        for (int i = 0; i < fs.length; i++) {
+            if (fs[i].isHidden()) continue;
+            nameSet.add(fs[i].getName().replace(fs[i].getName().split("_")[2],""));
         }
         int numCores = Runtime.getRuntime().availableProcessors();
-        fList.stream().forEach(f -> {
+        nameSet.stream().forEach(f -> {
+            String infile2 = new File (subFqDirS,f+"R2.fq").getAbsolutePath();
             StringBuilder sb = new StringBuilder();
             sb.append(this.starPath).append(" --runThreadN ").append(numCores);
             sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
             sb.append(" --sjdbGTFfile ").append(this.geneAnnotationFileS);
+            sb.append(" --genomeChrBinNbits  17");
+            sb.append(" --genomeSAsparseD 2");
             sb.append(" --genomeLoad LoadAndKeep");
-            sb.append(" --readFilesIn ").append(f);
-            sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f.getName().replaceFirst(".fq", ""))
+            sb.append(" --readFilesIn ").append(infile2);
+            sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
                 .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
             sb.append(" --outFilterMismatchNoverLmax ").append(this.mismatchRate)
                 .append(" --outFilterIntronMotifs RemoveNoncanonicalUnannotated ");
@@ -368,7 +375,6 @@ public class SiPASProfile {
             System.out.println("Finished"+f);
         });
         StringBuilder time = new StringBuilder();
-        time.append("Distinguish samples according to barcode and trim the barcode.").append("Took ").append(Benchmark.getTimeSpanSeconds(startTimePoint)).append(" seconds. Memory used: ").append(Benchmark.getUsedMemoryGb()).append(" Gb");
         System.out.println(time.toString());
         
     }
@@ -381,7 +387,7 @@ public class SiPASProfile {
             StringBuilder sb = new StringBuilder();
             sb.append("htseq-count").append(" -m intersection-nonempty -s reverse ");
             sb.append(f);
-            sb.append(" /data1/home/junxu/wheat/rnaseq20181204-ERCC/ERCC92/ERCC92.gtf").append(" >> ");
+            sb.append(" "+this.geneAnnotationFileS).append(" >> ");
             sb.append(f.getName().replace("Aligned.out.sam", "Count.txt"));
             String command = sb.toString();
             System.out.println(command);
@@ -406,7 +412,7 @@ public class SiPASProfile {
             StringBuilder sb = new StringBuilder();
             sb.append("htseq-count").append(" -m intersection-nonempty -s no ");
             sb.append(f);
-            sb.append(" /data1/home/junxu/wheat/rightchangewheat.gtf").append(" >> ");
+            sb.append(" "+this.geneAnnotationFileS).append(" >> ");
             sb.append(f.getName().replace("Aligned.out.sam", "Count.txt"));
             String command = sb.toString();
             System.out.println(command);
@@ -476,7 +482,7 @@ public class SiPASProfile {
         String outputFileS = new File (this.outputDirS,"countResult.txt").getAbsolutePath();
         try{
             StringBuilder sb = new StringBuilder();
-            BufferedWriter bw = IOUtils.getTextWriter(new File (this.outputDirS,subDirS[3]).getAbsolutePath());
+            BufferedWriter bw = IOUtils.getTextWriter(new File (outputFileS).getAbsolutePath());
             sb.append("Gene"+"\t");
             for(int i=0;i<fileList.size();i++){            
                 sb.append(fileList.get(i).replace("Count.txt", "")+"\t");

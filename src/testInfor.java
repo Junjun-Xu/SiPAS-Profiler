@@ -50,6 +50,7 @@ public class testInfor {
         for(int i=0;i<directories.length;i++){
             String inputDirS=inputInf[1]+"/"+directories[i];
             File[] fs = new File(inputInf[1]+"/"+directories[i]).listFiles();
+            System.out.println(fs);
             fs = IOUtils.listFilesEndsWith(fs, ".gz");
             HashSet<String> nameSet = new HashSet();
             for (int j = 0; j < fs.length; j++) {
@@ -338,6 +339,9 @@ public class testInfor {
             }
 	}
 	return null;
+    }
+    public static void main(String[] args) { 
+        new testInfor(args); 
     }
     
 }
