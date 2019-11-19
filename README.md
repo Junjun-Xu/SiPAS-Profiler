@@ -51,9 +51,7 @@ At the same time, we launch the bioinformatic pipeline of SiPAS (SiPAS-Profiler)
 ```
  
  
- ### Dependence
-
-#### Software
+#### Dependence
 
 ```sh
 STAR
@@ -62,7 +60,7 @@ STAR
 HTSeq
 ```
  
- #### Files
+#### Usage
  
  To start your analysis, you need to provide some parameter files. There also some options you can choose.
  
@@ -74,7 +72,7 @@ Author: Jun Xu, Fei Lu
 Email: junxu1048@genetics.ac.cn; flu@genetics.ac.cn
 Homepage: http://plantgeneticslab.weebly.com/
 #This program is used for gene expression profiling from Simplified Poly(A) Anchored Sequencing (SiPAS)
-#The usage is java -Xms10g -Xmx20g SiPAS.jar parameters_SiPAS.txt > log.txt &
+#The usage is java -Xms10g -Xmx20g SiPAS-Profiler.jar parameters_SiPAS.txt > log.txt &
 #Please keep the order of following parameters
 #Mode of alignment. PE or SE. The default is PE mode
 PE
@@ -197,7 +195,11 @@ PL-BC95    P1    CGGTGATA    /Users/junxu/Documents/analysisL/softwareTest/sipas
 PL-BC96    P1    ACGACTGT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
 ```
 
-### Additional Features
+##### 3.Run SiPAS from command line
+java -Xms10g -Xmx20g SiPAS-Profiler.jar parameters_SiPAS.txt > log.txt
+
+
+## Additional Features
 
 #### testInfor.jar
 
