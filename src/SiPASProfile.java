@@ -296,9 +296,6 @@ public class SiPASProfile {
             StringBuilder sb = new StringBuilder();
             sb.append(this.starPath).append(" --runThreadN ").append(numCores);
             sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
-            sb.append(" --sjdbGTFfile ").append(this.geneAnnotationFileS);
-            sb.append(" --genomeChrBinNbits  17");
-            sb.append(" --genomeSAsparseD 2");
             sb.append(" --genomeLoad LoadAndKeep");
             sb.append(" --readFilesIn ").append(infile1+" "+infile2);
             sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
@@ -307,7 +304,6 @@ public class SiPASProfile {
                 .append(" --outFilterIntronMotifs RemoveNoncanonicalUnannotated ");
             sb.append(" --outSAMtype SAM");
             sb.append(" --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin ").append(this.minNMatch);
-            sb.append(" --limitGenomeGenerateRAM 40000000000");
             String command = sb.toString();
             System.out.println(command);
             try {
@@ -346,9 +342,6 @@ public class SiPASProfile {
             StringBuilder sb = new StringBuilder();
             sb.append(this.starPath).append(" --runThreadN ").append(numCores);
             sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
-            sb.append(" --sjdbGTFfile ").append(this.geneAnnotationFileS);
-            sb.append(" --genomeChrBinNbits  17");
-            sb.append(" --genomeSAsparseD 2");
             sb.append(" --genomeLoad LoadAndKeep");
             sb.append(" --readFilesIn ").append(infile2);
             sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
