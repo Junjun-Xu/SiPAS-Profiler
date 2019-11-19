@@ -53,6 +53,7 @@ public class sampleParse {
             this.PEmode();
         }
     }
+    
     private void SEmode () {
         long startTimePoint = System.nanoTime();
         fqFileSList.parallelStream().forEach(f -> {
@@ -272,6 +273,7 @@ public class sampleParse {
         }
         Collections.sort(allTaxaList);
     }
+    
     public static void main(String args[]) {
         new sampleParse(args[0]);
     }

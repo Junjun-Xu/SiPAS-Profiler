@@ -6,6 +6,8 @@
 
 
 import format.table.RowTable;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -46,7 +48,8 @@ public class SiPASProfile {
      //The path of STAR alignment software
     String starPath = null;
     
-    List<String> fqFileSList = null;
+    List<String> fqFileSListR1 = null;
+    HashMap<String, String> fqR1R2Map = new HashMap();
     
     List<String>[] barcodeLists = null;
     
@@ -58,13 +61,14 @@ public class SiPASProfile {
     
     List<String> allTaxaList = new ArrayList<String>();
     
-    int[] barcodeLengths = null;
+    TIntArrayList[]  barcodeLengths = null;
     
 
     String[] subDirS = {"subFastqs", "sams", "geneCount", "countTable"};
     
     public SiPASProfile(String arg) {
         this.parseParameters(arg);
+        this.processTaxaAndBarcode();
         File starLib=new File(this.outputDirS,"starLib").getAbsoluteFile();
         if(!starLib.exists()){
             this.mkIndexOfReference();
@@ -87,12 +91,13 @@ public class SiPASProfile {
     }
     private void SEParse () {
         long startTimePoint = System.nanoTime();
-        fqFileSList.parallelStream().forEach(f -> {
-            int fqIndex = Collections.binarySearch(this.fqFileSList, f);
+        fqFileSListR1.parallelStream().forEach(f -> {
+            int fqIndex = Collections.binarySearch(this.fqFileSListR1, f);
             String subFqDirS = new File (this.outputDirS,subDirS[0]).getAbsolutePath();
             List<String> barcodeList = barcodeLists[fqIndex];
             String[] subFqFileS = new String[barcodeList.size()];
             HashMap<String, String> btMap = barcodeTaxaMaps[fqIndex];
+            TIntArrayList barcodeLength = this.barcodeLengths[fqIndex];
             Set<String> barcodeSet = btMap.keySet();
             BufferedWriter[] bws = new BufferedWriter[subFqFileS.length];
             HashMap<String, BufferedWriter> barcodeWriterMap = new HashMap<>();
@@ -102,11 +107,10 @@ public class SiPASProfile {
                 bws[i] = IOUtils.getTextWriter(subFqFileS[i]);
                 barcodeWriterMap.put(barcodeList.get(i), bws[i]);
             }
-            int barcodeLength = this.barcodeLengths[fqIndex];
             try {
                 BufferedReader br1 = null;
                 BufferedReader br2 = null;
-                String f2=f.replace("R1","R2");
+                String f2= fqR1R2Map.get(f);
                 if (f.endsWith(".gz")) {
                     br1 = IOUtils.getTextGzipReader(f);
                     br2 = IOUtils.getTextGzipReader(f2);
@@ -124,7 +128,11 @@ public class SiPASProfile {
                 while((temp = br1.readLine())!=null){
                     cnt2++;
                     seq = br1.readLine();
-                    currentBarcode = seq.substring(0, barcodeLength);
+                    //*************************
+                    //barcode needs  to have at least 2 mismathches between each other, currently at 3 mismathces between any 8-bp barcodes
+                    //barcode can be redesigned to have 4-8 bp in length for even efficiency between barcdes
+                    //*************************
+                    currentBarcode = seq.substring(0, barcodeLength.get(0));
                     int cutIndex = 0;
                     if (barcodeSet.contains(currentBarcode)) {
                         tw = barcodeWriterMap.get(currentBarcode);
@@ -132,6 +140,7 @@ public class SiPASProfile {
                         tw.write(br2.readLine());tw.newLine();
                         tw.write(br2.readLine());tw.newLine();
                         tw.write(br2.readLine());tw.newLine();
+                        cnt++;
                     }else {
                         br2.readLine();br2.readLine();br2.readLine();br2.readLine();
                         continue;
@@ -139,7 +148,7 @@ public class SiPASProfile {
                     br1.readLine();br1.readLine();
                 }
                 StringBuilder sb = new StringBuilder();
-                sb.append(cnt).append(" out of ").append(cnt2).append(", ").append(((float)(double)cnt/cnt2)).append(" of total reads were parsed from " + f);
+                sb.append(cnt).append(" out of ").append(cnt2).append(", ").append(((float)(double)cnt/cnt2)).append(" of total reads were parsed from " + f).append(" ").append(f2);
                 System.out.println(sb.toString());
                 for (int i = 0; i < subFqFileS.length; i++) {
                     bws[i].flush();
@@ -156,14 +165,16 @@ public class SiPASProfile {
         time.append("Distinguish samples according to barcode and trim the barcode.").append("Took ").append(Benchmark.getTimeSpanSeconds(startTimePoint)).append(" seconds. Memory used: ").append(Benchmark.getUsedMemoryGb()).append(" Gb");
         System.out.println(time.toString());
     }
+    
     private void PEParse () {
         long startTimePoint = System.nanoTime();
-        fqFileSList.parallelStream().forEach(f -> {
-            int fqIndex = Collections.binarySearch(this.fqFileSList, f);
+        fqFileSListR1.stream().forEach(f -> {
+            int fqIndex = Collections.binarySearch(this.fqFileSListR1, f);
             String subFqDirS = new File (this.outputDirS).getAbsolutePath();
             List<String> barcodeList = barcodeLists[fqIndex];
             String[] subFqFileS = new String[barcodeList.size()];
             HashMap<String, String> btMap = barcodeTaxaMaps[fqIndex];
+            TIntArrayList barcodeLength = this.barcodeLengths[fqIndex];
             Set<String> barcodeSet = btMap.keySet();
             BufferedWriter[] bws1 = new BufferedWriter[subFqFileS.length];
             BufferedWriter[] bws2 = new BufferedWriter[subFqFileS.length];
@@ -176,12 +187,11 @@ public class SiPASProfile {
                 bws2[i] = IOUtils.getTextWriter(new File(subFqDirS, taxon+"_R2.fq").getAbsolutePath());
                 barcodeWriterMap1.put(barcodeList.get(i), bws1[i]);
                 barcodeWriterMap2.put(barcodeList.get(i), bws2[i]);
-            }
-            int barcodeLength = this.barcodeLengths[fqIndex];
+            }     
             try {
                 BufferedReader br1 = null;
                 BufferedReader br2 = null;
-                String f2=f.replace("R1","R2");
+                String f2= fqR1R2Map.get(f);
                 if (f.endsWith(".gz")) {
                     br1 = IOUtils.getTextGzipReader(f);
                     br2 = IOUtils.getTextGzipReader(f2);
@@ -200,7 +210,11 @@ public class SiPASProfile {
                 while((temp = br1.readLine())!=null){
                     cnt2++;
                     seq = br1.readLine();
-                    currentBarcode = seq.substring(0, barcodeLength);
+                    //*************************
+                    //barcode needs  to have at least 2 mismathches between each other, currently at 3 mismathces between any 8-bp barcodes
+                    //barcode can be redesigned to have 4-8 bp in length for even efficiency between barcdes
+                    //*************************
+                    currentBarcode = seq.substring(0, barcodeLength.get(0));
                     int cutIndex = 0;
                     if (barcodeSet.contains(currentBarcode)) {
                         tw1 = barcodeWriterMap1.get(currentBarcode);
@@ -213,7 +227,7 @@ public class SiPASProfile {
                         tw2.write(br2.readLine());tw2.newLine();
                         tw2.write(br2.readLine());tw2.newLine();
                         tw2.write(br2.readLine());tw2.newLine();
-
+                        cnt++;
                     }
                     else {
                         br1.readLine();br1.readLine();
@@ -222,7 +236,7 @@ public class SiPASProfile {
                     }
                 }
                 StringBuilder sb = new StringBuilder();
-                sb.append(cnt).append(" out of ").append(cnt2).append(", ").append(((float)(double)cnt/cnt2)).append(" of total reads were parsed from " + f);
+                sb.append(cnt).append(" out of ").append(cnt2).append(", ").append(((float)(double)cnt/cnt2)).append(" of total reads were parsed from " + f).append(" ").append(f2);
                 System.out.println(sb.toString());
                 for (int i = 0; i < subFqFileS.length; i++) {
                     bws1[i].flush();bws2[i].flush();
@@ -244,7 +258,7 @@ public class SiPASProfile {
         new File(this.outputDirS, "starLib").mkdir();
         String outputDirS = new File (this.outputDirS, "starLib").getAbsolutePath();
         try {
-            StringBuilder sb = new StringBuilder("/Users/feilu/Software/STAR-2.5.4b/bin/MacOSX_x86_64/STAR");
+            StringBuilder sb = new StringBuilder(this.starPath);
             sb.append(" --runThreadN ").append(numCores).append(" --runMode genomeGenerate --genomeDir ").append(outputDirS);
             sb.append(" --sjdbGTFfile ").append(geneAnnotationFileS);
             sb.append(" --genomeFastaFiles ").append(referenceGenomeFileS);
@@ -536,9 +550,9 @@ public class SiPASProfile {
             BufferedReader br = IOUtils.getTextReader(infileS);
             String temp = null;
             boolean ifOut = false;
-            if (!(temp = br.readLine()).equals("Three' Expression Profiler (TEP)")) ifOut = true;
+            if (!(temp = br.readLine()).equals("SiPAS-Profiler")) ifOut = true;
             if (!(temp = br.readLine()).equals("Author: Jun Xu, Fei Lu")) ifOut = true;
-            if (!(temp = br.readLine()).equals("Email: liuzhongxujun@163.com; flu@genetics.ac.cn")) ifOut = true;
+            if (!(temp = br.readLine()).equals("Email: junxu1048@genetics.ac.cn; flu@genetics.ac.cn")) ifOut = true;
             if (!(temp = br.readLine()).equals("Homepage: http://plantgeneticslab.weebly.com/")) ifOut = true;
             if (ifOut) {
                 System.out.println("Thanks for using sampleParse.");
@@ -573,8 +587,8 @@ public class SiPASProfile {
         }
         this.sampleInformationFileS = pLineList.get(4);
         this.outputDirS = pLineList.get(5);
-        this.referenceGenomeFileS=pLineList.get(6);
-        this.geneAnnotationFileS=pLineList.get(7);
+        this.geneAnnotationFileS=pLineList.get(6);
+        this.referenceGenomeFileS=pLineList.get(7);
         this.starPath=pLineList.get(8);
         for (int i = 0; i < this.subDirS.length; i++) {
             new File(this.outputDirS, subDirS[i]).mkdir();
@@ -585,35 +599,42 @@ public class SiPASProfile {
         Set<String> fqSet = new HashSet<>();
         for (int i = 0; i < t.getRowNumber(); i++) {
             fqSet.add(t.getCell(i, 3));
+            fqR1R2Map.putIfAbsent(t.getCell(i, 3), t.getCell(i, 4));
         }
-        fqFileSList = new ArrayList<>(fqSet);
-        Collections.sort(fqFileSList);
-        barcodeLengths = new int[fqFileSList.size()]; //不同的样本可能带有不同长度的barcode
-        barcodeLists = new ArrayList[fqFileSList.size()];
-        taxaLists = new ArrayList[fqFileSList.size()];
-        barcodeTaxaMaps = new HashMap[fqFileSList.size()];
-        int[] cnts = new int[fqFileSList.size()];
+        fqFileSListR1 = new ArrayList<>(fqSet);
+        Collections.sort(fqFileSListR1);
+        barcodeLengths = new TIntArrayList[fqFileSListR1.size()]; //不同的样本可能带有不同长度的barcode
+        barcodeLists = new ArrayList[fqFileSListR1.size()];
+        taxaLists = new ArrayList[fqFileSListR1.size()];
+        barcodeTaxaMaps = new HashMap[fqFileSListR1.size()];
+        int[] cnts = new int[fqFileSListR1.size()];
         for (int i = 0; i < t.getRowNumber(); i++) {
-            int index = Collections.binarySearch(fqFileSList, t.getCell(i, 3));
+            int index = Collections.binarySearch(fqFileSListR1, t.getCell(i, 3));
             cnts[index]++;
         }
         for (int i = 0; i < cnts.length; i++) {
-            barcodeLists[i] = new ArrayList<>();
-            taxaLists[i] = new ArrayList<>();
-            barcodeTaxaMaps[i] = new HashMap<>();
+            barcodeLists[i] = new ArrayList<>(cnts[i]);
+            taxaLists[i] = new ArrayList<>(cnts[i]);
+            barcodeTaxaMaps[i] = new HashMap<>(cnts[i]);
+            barcodeLengths[i] = new TIntArrayList(cnts[i]);
         }
         for (int i = 0; i < t.getRowNumber(); i++) {
-            int index = Collections.binarySearch(fqFileSList, t.getCell(i, 3));
-            String taxon = t.getCell(i, 0) + "_"+ t.getCell(i, 2);//这个连接起来的taxon就是我们要找的index信息
+            int index = Collections.binarySearch(fqFileSListR1, t.getCell(i, 3));
+            String taxon = t.getCell(i, 0) + "_"+ t.getCell(i, 1);//这个连接起来的taxon就是我们要找的index信息
             allTaxaList.add(taxon);
             taxaLists[index].add(taxon);
-            barcodeLists[index].add(t.getCell(i, 1));
-            barcodeTaxaMaps[index].put(t.getCell(i, 1), taxon);
-            barcodeLengths[index] = t.getCell(i, 1).length();
+            barcodeLists[index].add(t.getCell(i, 2));
+            barcodeTaxaMaps[index].put(t.getCell(i, 2), taxon);
+            barcodeLengths[index].add(t.getCell(i, 2).length());
         }
         Collections.sort(allTaxaList);
+        StringBuilder sb = new StringBuilder();
+        sb.append("There are ").append(fqSet.size()).append(" plates, or ").append(allTaxaList.size()).append(" taxa to be processed.");
+        System.out.println(sb.toString());
     }
+    
     public static void main(String args[]) {
-        new sampleParse(args[0]);
+        new SiPASProfile (args[0]);
+//        new sampleParse(args[0]);
     }
 }
