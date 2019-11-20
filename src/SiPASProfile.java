@@ -429,26 +429,31 @@ public class SiPASProfile {
         fs = IOUtils.listFilesEndsWith(fs, "Count.txt");
         List<File> fList = Arrays.asList(fs);
         for(int i=0;i < fList.size();i++){
-            fileList.add(fList.get(i).getName().replace("Count.txt", ""));
+            fileList.add(fList.get(i).getName().replace("_Count.txt", ""));
         }
         Collections.sort(fileList);
-        int geneNumber=0;
+        int geneNumber=0;String geneName=null;
+        ArrayList<String> geneList = new ArrayList();
         try{
             BufferedReader br = IOUtils.getTextReader(geneAnnotationFileS);
             String temp = null; String[] tem = null;
-            
             while ((temp = br.readLine()) != null) {
                 List<String> tList= PStringUtils.fastSplit(temp);
                 tem = tList.toArray(new String[tList.size()]);
-                if (tem[2].startsWith("exon")){
-                    geneNumber++;
-                }                            
+                if (tem[2].startsWith("CDS")) continue;
+                if (tem[2].startsWith("exon")) {
+                    String[] te = tem[8].split(";");
+                    geneName=te[1].split("\"")[1].substring(0,te[1].split("\"")[1].length()-1);
+                    if(!(geneList.contains(geneName))){
+                        geneList.add(geneName);
+                    }
+                }
             }
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-        int [][] count=new int[geneNumber][fList.size()];
+        int [][] count=new int[geneList.size()][fList.size()];
         fList.stream().forEach(f -> {
             String temp=null;String[] tem = null;
             try{           
@@ -461,7 +466,7 @@ public class SiPASProfile {
                             nameList.add(tem[0]);
                         }
                         int index=nameList.indexOf(tem[0]);
-                        count[index][fileList.indexOf(f.getName().replace("Count.txt", ""))]=Integer.parseInt(tem[1]);
+                        count[index][fileList.indexOf(f.getName().replace("_Count.txt", ""))]=Integer.parseInt(tem[1]);
                     }      
                 }
 
@@ -472,13 +477,14 @@ public class SiPASProfile {
 
             }
         });
-        String outputFileS = new File (this.outputDirS,"countResult.txt").getAbsolutePath();
+        File subDir = new File (this.outputDirS,subDirS[3]);
+        String outputFileS = new File (subDir,"countResult.txt").getAbsolutePath();
         try{
             StringBuilder sb = new StringBuilder();
             BufferedWriter bw = IOUtils.getTextWriter(new File (outputFileS).getAbsolutePath());
             sb.append("Gene"+"\t");
             for(int i=0;i<fileList.size();i++){            
-                sb.append(fileList.get(i).replace("Count.txt", "")+"\t");
+                sb.append(fileList.get(i)+"\t");
             }
             bw.write(sb.toString());
             bw.newLine();
