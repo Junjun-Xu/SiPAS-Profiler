@@ -4,31 +4,34 @@
  * and open the template in the editor.
  */
 
+/**
+ *
+ * @author xujun
+ */
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 
 import format.table.RowTable;
-import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
+import htsjdk.samtools.*;
+import utils.Benchmark;
+import utils.IOUtils;
+import utils.PStringUtils;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import utils.Benchmark;
-import utils.IOUtils;
-import utils.PStringUtils;
+import java.util.*;
 
 /**
  *
  * @author xujun
  */
-public class SiPASProfile {
+public class SiPASUMIProfile {
     // The mode of alignment. PE or SE. The default is PE mode.
     String alignType=null;
     //The multimap number.If the value is 10. It means that if the read map to more than 10 position, it will be discarded. Default is 2.
@@ -45,7 +48,7 @@ public class SiPASProfile {
     String geneAnnotationFileS = null;
     //The gene reference file (fa format)
     String referenceGenomeFileS = null;
-     //The path of STAR alignment software
+    //The path of STAR alignment software
     String starPath = null;
 
     List<String> fqFileSListR1 = null;
@@ -63,12 +66,16 @@ public class SiPASProfile {
 
     TIntArrayList[]  barcodeLengths = null;
 
+    String [] names=null;
+
+
 
     String[] subDirS = {"subFastqs", "sams", "geneCount", "countTable"};
 
-    public SiPASProfile(String arg) {
+    public SiPASUMIProfile(String arg) {
         this.parseParameters(arg);
         this.processTaxaAndBarcode();
+//        starLib=new File("/data1/home/junxu/eQTL/phenotype/starLib1.1").getAbsoluteFile();
         File starLib=new File(this.outputDirS,"starLib").getAbsoluteFile();
         if(!starLib.exists()){
             this.mkIndexOfReference();
@@ -85,9 +92,13 @@ public class SiPASProfile {
         }else{
             this.PEParse();
             this.starAlignmentPE();
+            this.annotatedBAM();
+            this.removeDuplicate();
             this.HTSeqCountPE();
+
         }
         this.countTable();
+        this.countUMITable();
     }
     private void SEParse () {
         long startTimePoint = System.nanoTime();
@@ -122,6 +133,7 @@ public class SiPASProfile {
                 String temp = null;
                 String seq = null;
                 String currentBarcode = null;
+                String currentUMI=null;
                 BufferedWriter tw = null;
                 int cnt = 0;
                 int cnt2 = 0;
@@ -133,10 +145,11 @@ public class SiPASProfile {
                     //barcode can be redesigned to have 4-8 bp in length for even efficiency between barcdes
                     //*************************
                     currentBarcode = seq.substring(0, barcodeLength.get(0));
+                    currentUMI=seq.substring(barcodeLength.get(0),barcodeLength.get(0)+10);
                     int cutIndex = 0;
                     if (barcodeSet.contains(currentBarcode)) {
                         tw = barcodeWriterMap.get(currentBarcode);
-                        tw.write(br2.readLine());tw.newLine();
+                        tw.write(br2.readLine()+"_"+currentUMI);tw.newLine();
                         tw.write(br2.readLine());tw.newLine();
                         tw.write(br2.readLine());tw.newLine();
                         tw.write(br2.readLine());tw.newLine();
@@ -178,13 +191,14 @@ public class SiPASProfile {
             Set<String> barcodeSet = btMap.keySet();
             BufferedWriter[] bws1 = new BufferedWriter[subFqFileS.length];
             BufferedWriter[] bws2 = new BufferedWriter[subFqFileS.length];
+            BufferedWriter bwE =IOUtils.getTextGzipWriter(new File(subFqDirS+"/"+f.split("/")[f.split("/").length-1].replace("fq.gz", alignType)+"_error.txt.gz").getAbsolutePath());
             HashMap<String, BufferedWriter> barcodeWriterMap1 = new HashMap<>();
             HashMap<String, BufferedWriter> barcodeWriterMap2 = new HashMap<>();
             for (int i = 0; i < subFqFileS.length; i++) {
                 String taxon = btMap.get(barcodeList.get(i));
                 subFqFileS[i] = new File(subFqDirS, taxon+".fq").getAbsolutePath();
-                bws1[i] = IOUtils.getTextWriter(new File(subFqDirS, taxon+"_R1.fq").getAbsolutePath());
-                bws2[i] = IOUtils.getTextWriter(new File(subFqDirS, taxon+"_R2.fq").getAbsolutePath());
+                bws1[i] = IOUtils.getTextGzipWriter(new File(subFqDirS, taxon+"_R1.fq.gz").getAbsolutePath());
+                bws2[i] = IOUtils.getTextGzipWriter(new File(subFqDirS, taxon+"_R2.fq.gz").getAbsolutePath());
                 barcodeWriterMap1.put(barcodeList.get(i), bws1[i]);
                 barcodeWriterMap2.put(barcodeList.get(i), bws2[i]);
             }
@@ -203,6 +217,7 @@ public class SiPASProfile {
                 String temp = null;
                 String seq = null;
                 String currentBarcode = null;
+                String currentUMI=null;
                 BufferedWriter tw1 = null;
                 BufferedWriter tw2 = null;
                 int cnt = 0;
@@ -215,12 +230,15 @@ public class SiPASProfile {
                     //barcode can be redesigned to have 4-8 bp in length for even efficiency between barcdes
                     //*************************
                     currentBarcode = seq.substring(0, barcodeLength.get(0));
+                    currentUMI=seq.substring(barcodeLength.get(0),barcodeLength.get(0)+10);
                     int cutIndex = 0;
                     if (barcodeSet.contains(currentBarcode)) {
                         tw1 = barcodeWriterMap1.get(currentBarcode);
-                        tw1.write(temp);tw1.newLine();
+                        tw1.write(temp+"_"+currentUMI);tw1.newLine();
+//                        tw1.write(seq.substring(currentBarcode.length()+currentUMI.length()+5));tw1.newLine();
                         tw1.write(seq);tw1.newLine();
                         tw1.write(br1.readLine());tw1.newLine();
+//                        tw1.write(br1.readLine().substring(currentBarcode.length()+currentUMI.length()+5));tw1.newLine();
                         tw1.write(br1.readLine());tw1.newLine();
                         tw2 = barcodeWriterMap2.get(currentBarcode);
                         tw2.write(br2.readLine());tw2.newLine();
@@ -230,7 +248,10 @@ public class SiPASProfile {
                         cnt++;
                     }
                     else {
-                        br1.readLine();br1.readLine();
+                        bwE.write(temp);bwE.newLine();
+                        bwE.write(seq);bwE.newLine();
+                        bwE.write(br1.readLine());bwE.newLine();
+                        bwE.write(br1.readLine());bwE.newLine();
                         br2.readLine();br2.readLine();br2.readLine();br2.readLine();
                         continue;
                     }
@@ -243,6 +264,7 @@ public class SiPASProfile {
                     bws1[i].close();bws2[i].close();
                 }
                 br1.close();br2.close();
+                bwE.flush();bwE.close();
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -263,6 +285,7 @@ public class SiPASProfile {
             sb.append(" --sjdbGTFfile ").append(geneAnnotationFileS);
             sb.append(" --genomeFastaFiles ").append(referenceGenomeFileS);
             sb.append(" --sjdbOverhang ").append(140);
+            sb.append(" --genomeChrBinNbits 17 --genomeSAsparseD 2 --limitGenomeGenerateRAM 40000000000");
             String command = sb.toString();
             System.out.println(command);
             Runtime rt = Runtime.getRuntime();
@@ -283,44 +306,57 @@ public class SiPASProfile {
         String subFqDirS = new File (this.outputDirS, subDirS[0]).getAbsolutePath();
         File[] fs = new File(subFqDirS).listFiles();
         List<File> fList = new ArrayList(Arrays.asList());
-        fs = IOUtils.listFilesEndsWith(fs, ".fq");
+        fs = IOUtils.listFilesEndsWith(fs, ".fq.gz");
         HashSet<String> nameSet = new HashSet();
         for (int i = 0; i < fs.length; i++) {
             if (fs[i].isHidden()) continue;
-            nameSet.add(fs[i].getName().replace(fs[i].getName().split("_")[2],""));
+            int le=fs[i].getName().split("_").length-1;
+            nameSet.add(fs[i].getName().replace(fs[i].getName().split("_")[le], ""));
         }
         int numCores = Runtime.getRuntime().availableProcessors();
-        nameSet.stream().forEach(f ->{
-            String infile1 = new File (subFqDirS,f+"R1.fq").getAbsolutePath();
-            String infile2 = new File (subFqDirS,f+"R2.fq").getAbsolutePath();
-            StringBuilder sb = new StringBuilder();
-            sb.append(this.starPath).append(" --runThreadN ").append(numCores);
-            sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
-            sb.append(" --genomeLoad LoadAndKeep");
-            sb.append(" --readFilesIn ").append(infile1+" "+infile2);
-            sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
-                .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
-            sb.append(" --outFilterMismatchNoverLmax ").append(this.mismatchRate)
-                .append(" --outFilterIntronMotifs RemoveNoncanonicalUnannotated ");
-            sb.append(" --outSAMtype SAM");
-            sb.append(" --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin ").append(this.minNMatch);
-            String command = sb.toString();
-            System.out.println(command);
-            try {
-                Runtime rt = Runtime.getRuntime();
-                Process p = rt.exec(command);
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                String temp = null;
-                while ((temp = br.readLine()) != null) {
-                    System.out.println(temp);
-                }
-                p.waitFor();
+        int count=0;HashSet <String> nameSet1 = new HashSet();
+        names = nameSet.toArray(new String[nameSet.size()]);
+        for(int i=0;i<names.length;i++){
+            if((i+1)/2==count && i!=nameSet.size()-1){//实现了同时跑10个HTSeq
+                nameSet1.add(names[i]);
+            }else{
+                nameSet1.add(names[i]);
+                nameSet1.parallelStream().forEach(f -> {
+                    String infile1 = new File (subFqDirS,f+"R1.fq.gz").getAbsolutePath();
+                    String infile2 = new File (subFqDirS,f+"R2.fq.gz").getAbsolutePath();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(this.starPath).append(" --runThreadN ").append(numCores);
+                    sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
+                    sb.append(" --genomeLoad LoadAndKeep");
+                    sb.append(" --readFilesCommand zcat");
+                    sb.append(" --readFilesIn ").append(infile1+" "+infile2);
+                    sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
+                            .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
+                    sb.append(" --outFilterMismatchNoverLmax ").append(this.mismatchRate)
+                            .append(" --outFilterIntronMotifs RemoveNoncanonicalUnannotated ");
+                    sb.append(" --outSAMtype BAM Unsorted");
+                    sb.append(" --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin ").append(this.minNMatch);
+                    String command = sb.toString();
+                    System.out.println(command);
+                    try {
+                        Runtime rt = Runtime.getRuntime();
+                        Process p = rt.exec(command);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                        String temp = null;
+                        while ((temp = br.readLine()) != null) {
+                            System.out.println(temp);
+                        }
+                        p.waitFor();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("Finished "+f);
+                });
+                count++;
+                nameSet1.clear();
             }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            System.out.println("Finished "+f);
-        });
+        }
         StringBuilder time = new StringBuilder();
         System.out.println(time.toString());
 
@@ -345,10 +381,10 @@ public class SiPASProfile {
             sb.append(" --genomeLoad LoadAndKeep");
             sb.append(" --readFilesIn ").append(infile2);
             sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
-                .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
+                    .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
             sb.append(" --outFilterMismatchNoverLmax ").append(this.mismatchRate)
-                .append(" --outFilterIntronMotifs RemoveNoncanonicalUnannotated ");
-            sb.append(" --outSAMtype SAM");
+                    .append(" --outFilterIntronMotifs RemoveNoncanonicalUnannotated ");
+            sb.append(" --outSAMtype BAM SortedByCoordinate");
             sb.append(" --outFilterScoreMinOverLread 0 --outFilterMatchNminOverLread 0 --outFilterMatchNmin ").append(this.minNMatch);
             String command = sb.toString();
             System.out.println(command);
@@ -371,67 +407,191 @@ public class SiPASProfile {
         System.out.println(time.toString());
 
     }
+    public void annotatedBAM(){
+        String inputDirS = new File (this.outputDirS, subDirS[1]).getAbsolutePath();
+        String fqDirS=new File (this.outputDirS, subDirS[0]).getAbsolutePath();
+        File[] fs = new File(inputDirS).listFiles();
+        fs = IOUtils.listFilesEndsWith(fs, "Aligned.out.bam");
+        List<File> fList = Arrays.asList(fs);
+        int count=0;
+        List<File> fSet1 = new ArrayList(Arrays.asList());
+        for(int i=0;i<fList.size();i++){
+            if((i+1)/10==count && i!=fList.size()-1){//实现了n个同时跑
+                fSet1.add(fList.get(i));
+            }else{
+                fSet1.add(fList.get(i));
+                fSet1.parallelStream().forEach(f -> {
+                    try{
+                        BufferedReader br =IOUtils.getTextGzipReader(fqDirS+"/"+f.getName().replace("Aligned.out.bam", "R1.fq.gz"));
+                        HashMap<String,String>[] hm = new HashMap[11];
+                        HashSet<String>[] hs=new HashSet[11];
+                        for(int j=0;j<hm.length;j++){
+                            hm[j]=new HashMap();
+                            hs[j]=new HashSet();
+                        }
+                        String temp=null;String QNAME=null;String currentUMI=null;
+                        while((temp=br.readLine())!=null){
+                            QNAME=temp.split(" ")[0].replace("@", "");
+                            currentUMI=temp.split("_")[1];
+                            int num=10-currentUMI.replaceAll("A", "").length();
+                            hm[num].put(QNAME, currentUMI);
+                            hs[num].add(QNAME);
+                            br.readLine();br.readLine();br.readLine();
+                        }
+                        SamReader sr = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(f);
+                        SAMFileHeader header=sr.getFileHeader();
+                        SAMFileWriterFactory samWriterFactory = new SAMFileWriterFactory();
+                        SAMFileWriter samWriter = samWriterFactory.makeBAMWriter(header, false, new File(inputDirS + "/"+f.getName().replace("Aligned.out.bam", "annotated.bam")));
+                        SAMRecordIterator r = sr.iterator();
+                        while(r.hasNext()) {
+                            SAMRecord tem=r.next();
+//                            System.out.print(tem.getReadName());
+                            for(int j =0;j<hs.length;j++){
+                                if(hs[j].contains(tem.getReadName())){
+                                    tem.setAttribute("UI", hm[j].get(tem.getReadName()));
+                                }
+                            }
+                            samWriter.addAlignment(tem);
+                        }
+                        samWriter.close();
+                        System.out.println("Finished"+f);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                });
+                count++;
+                fSet1.clear();
+            }
+        }
+    }
+
+    public void removeDuplicate(){
+        String inputDirS = new File (this.outputDirS, subDirS[1]).getAbsolutePath();
+        File[] fs = new File(inputDirS).listFiles();
+        fs = IOUtils.listFilesEndsWith(fs, "annotated.bam");
+        List<File> fList = Arrays.asList(fs);
+        int count=0;List<File> fL1 = new ArrayList(Arrays.asList());
+        for(int i=0;i<fList.size();i++){
+            if((i+1)/10==count && i!=fList.size()-1){//实现了同时跑10个
+                fL1.add(fList.get(i));
+            }else{
+                fL1.add(fList.get(i));
+                fL1.parallelStream().forEach(f -> {
+                    SamReader sr = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(f);
+                    HashSet UMISet = new HashSet();
+                    String UMI= null;
+                    SAMFileHeader header=sr.getFileHeader();
+                    SAMFileWriterFactory samWriterFactory = new SAMFileWriterFactory();
+                    SAMFileWriter samWriter = samWriterFactory.makeBAMWriter(header, false, new File(inputDirS +"/"+ f.getName().replace("annotated.bam", "UMI.bam")));
+                    SAMRecordIterator r = sr.iterator();
+                    while(r.hasNext()) {
+                        SAMRecord tem=r.next();
+                        UMI=tem.getAttribute("UI").toString()+tem.getAlignmentStart()+tem.getAlignmentEnd();
+                        if(!UMISet.contains(UMI)){
+                            UMISet.add(UMI);
+                            samWriter.addAlignment(tem);
+                        }
+                    }
+                    samWriter.close();
+                    System.out.println("Finished"+f);
+                });
+                count++;
+                fL1.clear();
+            }
+        }
+    }
     public void HTSeqCountPE(){
         String inputDirS = new File (this.outputDirS, subDirS[1]).getAbsolutePath();
         File[] fs = new File(inputDirS).listFiles();
-        fs = IOUtils.listFilesEndsWith(fs, "Aligned.out.sam");
-        List<File> fList = Arrays.asList(fs);
-        fList.stream().forEach(f -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append("htseq-count").append(" -m intersection-nonempty -s reverse ");
-            sb.append(f);
-            sb.append(" "+this.geneAnnotationFileS).append(" >> ");
-            sb.append(f.getName().replace("Aligned.out.sam", "Count.txt"));
-            String command = sb.toString();
-            System.out.println(command);
-            try {
-                File dir = new File(new File (this.outputDirS,subDirS[2]).getAbsolutePath());
-                String []cmdarry ={"/bin/bash","-c",command};
-                Process p=Runtime.getRuntime().exec(cmdarry,null,dir);
-                p.waitFor();
+        List<File> fList = new ArrayList(Arrays.asList());
+        for(int i=0; i< fs.length;i++){
+            if(fs[i].getName().contains("UMI.bam") || fs[i].getName().contains("Aligned.out.bam") ){//|| fs[i].getName().contains("annotated.bam")
+                fList.add(fs[i]);
             }
-            catch (Exception e) {
-                e.printStackTrace();
+        }
+        int count=0;List<File> fL1 = new ArrayList(Arrays.asList());
+        for(int i=0;i<fList.size();i++){
+            if((i+1)/10==count && i!=fList.size()-1){//实现了同时跑10个HTSeq
+                fL1.add(fList.get(i));
+            }else{
+                fL1.add(fList.get(i));
+                fL1.parallelStream().forEach(f -> {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("htseq-count").append(" -f bam -m intersection-nonempty -s reverse ");
+                    sb.append(f);
+                    sb.append(" "+this.geneAnnotationFileS).append(" > ");
+                    if(f.getName().contains("UMI.bam")){
+                        sb.append(f.getName().replace("UMI.bam", "UMICount.txt"));
+                    }else{
+                        sb.append(f.getName().replace("Aligned.out.bam", "RawCount.txt"));
+                    }
+                    String command = sb.toString();
+                    System.out.println(command);
+                    try {
+                        File dir = new File(new File (this.outputDirS,subDirS[2]).getAbsolutePath());
+                        String []cmdarry ={"/bin/bash","-c",command};
+                        Process p=Runtime.getRuntime().exec(cmdarry,null,dir);
+                        p.waitFor();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("Finished"+f);
+                });
+                count++;
+                fL1.clear();
             }
-            System.out.println("Finished"+f);
-        });
+        }
     }
     public void HTSeqCountSE(){
         String inputDirS = new File (this.outputDirS, subDirS[1]).getAbsolutePath();
         File[] fs = new File(inputDirS).listFiles();
-        fs = IOUtils.listFilesEndsWith(fs, "Aligned.out.sam");
+        fs = IOUtils.listFilesEndsWith(fs, "UMI.bam");
         List<File> fList = Arrays.asList(fs);
-        fList.stream().forEach(f -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append("htseq-count").append(" -m intersection-nonempty -s no ");
-            sb.append(f);
-            sb.append(" "+this.geneAnnotationFileS).append(" >> ");
-            sb.append(f.getName().replace("Aligned.out.sam", "Count.txt"));
-            String command = sb.toString();
-            System.out.println(command);
-            try {
-                File dir = new File(new File (this.outputDirS,subDirS[2]).getAbsolutePath());
-                String []cmdarry ={"/bin/bash","-c",command};
-                Process p=Runtime.getRuntime().exec(cmdarry,null,dir);
-                p.waitFor();
+        int count=0;List<File> fL1 = new ArrayList(Arrays.asList());
+        for(int i=0;i<fList.size();i++){
+            if((i+1)/10==count && i!=fList.size()-1){//实现了同时跑10个HTSeq
+                fL1.add(fList.get(i));
+            }else{
+                fL1.add(fList.get(i));
+                fL1.parallelStream().forEach(f -> {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("htseq-count").append(" -f bam -m intersection-nonempty -s no ");
+                    sb.append(f);
+                    sb.append(" "+this.geneAnnotationFileS).append(" >> ");
+                    sb.append(f.getName().replace("UMI.bam", "Count.txt"));
+                    String command = sb.toString();
+                    System.out.println(command);
+                    try {
+                        File dir = new File(new File (this.outputDirS,subDirS[2]).getAbsolutePath());
+                        String []cmdarry ={"/bin/bash","-c",command};
+                        Process p=Runtime.getRuntime().exec(cmdarry,null,dir);
+                        p.waitFor();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("Finished"+f);
+                });
+                count++;
+                fL1.clear();
             }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            System.out.println("Finished"+f);
-        });
+        }
     }
-    public void countTable(){
+    public void countUMITable(){
         List <String> plateList=new ArrayList<>();
         List <File> [] fileList=new List[fqFileSListR1.size()];//
-        for(int i=0;i<fqFileSListR1.size();i++) {//
-            fileList[i] = new ArrayList<File>();
+        for(int i=0;i<fqFileSListR1.size();i++){//
+            fileList[i]=new ArrayList<File>();
         }
+//        String subCountDirS = new File ("/Users/xujun/Desktop/eQTL/total/geneCount").getAbsolutePath();
         String subCountDirS = new File (this.outputDirS,subDirS[2]).getAbsolutePath();
         File[] fs = new File(subCountDirS).listFiles();
-        fs = IOUtils.listFilesEndsWith(fs, "Count.txt");
+        fs = IOUtils.listFilesEndsWith(fs, "UMICount.txt");
         List<File> fList = Arrays.asList(fs);
-        int length =0;
+        int length=0;
         for(int i=0;i < fList.size();i++){
             length=fList.get(i).getName().split("_").length-2;
             String plate=fList.get(i).getName().split("_")[length];
@@ -481,6 +641,7 @@ public class SiPASProfile {
                                 nameList.add(tem[0]);
                             }
                             nameSet.add(tem[0]);
+//                          int index1=nameList.indexOf(tem[0]);
                             count[rowN][list.indexOf(f)]=Integer.parseInt(tem[1]);
                             rowN++;
                         }
@@ -494,13 +655,13 @@ public class SiPASProfile {
                 }
             });
             File subDir = new File (this.outputDirS,subDirS[3]);
-            String outputFileS = new File (subDir,fileList[i].get(0).getName().split("_")[length]+"_countResult.txt").getAbsolutePath();
+            String outputFileS = new File (subDir,fileList[i].get(0).getName().split("_")[length]+"_UMI_countResult.txt").getAbsolutePath();
             try{
                 StringBuilder sb = new StringBuilder();
                 BufferedWriter bw = IOUtils.getTextWriter(new File (outputFileS).getAbsolutePath());
                 sb.append("Gene"+"\t");
                 for(int j=0;j<fileList[i].size();j++){
-                    sb.append(fileList[i].get(j).getName().replaceAll("_Count.txt", "")+"\t");
+                    sb.append(fileList[i].get(j).getName().replaceAll("_UMICount.txt", "")+"\t");
                 }
                 bw.write(sb.toString().replaceAll("\\s+$", ""));
                 bw.newLine();
@@ -525,6 +686,113 @@ public class SiPASProfile {
         }
 
     }
+    public void countTable(){
+        List <String> plateList=new ArrayList<>();
+        List <File> [] fileList=new List[fqFileSListR1.size()];//
+        for(int i=0;i<fqFileSListR1.size();i++){//
+            fileList[i]=new ArrayList<File>();
+        }
+//        String subCountDirS = new File ("/Users/xujun/Desktop/eQTL/total/geneCount").getAbsolutePath();
+        String subCountDirS = new File (this.outputDirS,subDirS[2]).getAbsolutePath();
+        File[] fs = new File(subCountDirS).listFiles();
+        fs = IOUtils.listFilesEndsWith(fs, "RawCount.txt");
+        List<File> fList = Arrays.asList(fs);
+        int length=0;
+        for(int i=0;i < fList.size();i++){
+            length=fList.get(i).getName().split("_").length-2;
+            String plate=fList.get(i).getName().split("_")[length];
+            if(!plateList.contains(plate)){
+                plateList.add(plate);
+            }
+            fileList[plateList.indexOf(plate)].add(fList.get(i));
+        }
+        int geneNumber=0;String geneName=null;
+        Set<String> geneSet = new HashSet<String>();
+        for(int i=0;i<fileList.length;i++){
+            Collections.sort(fileList[i]);
+        }
+        int geneNmuber=0;
+        StringBuilder wc = new StringBuilder();
+        wc.append("wc -l ").append(fileList[0].get(0));
+        String command = wc.toString();
+        System.out.println(command);
+        try {
+            Runtime rt = Runtime.getRuntime();
+            Process p = rt.exec(command);
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String temp = null;
+            while ((temp = br.readLine()) != null) {
+                geneNumber=Integer.valueOf(temp.split(" ")[0])-5;
+            }
+            p.waitFor();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        for(int i=0;i<fileList.length;i++){
+            Set<String> nameSet = new HashSet<String>();
+            List <String> nameList=new ArrayList<>();
+            int [][] count = new int [geneNumber][fileList[i].size()];
+            List<File> list = fileList[i];
+            list.stream().forEach(f -> {
+                String temp=null;String[] tem = null;
+                try{
+                    BufferedReader br = IOUtils.getTextReader(f.getAbsolutePath());
+                    int rowN=0;
+                    while((temp = br.readLine()) != null){
+                        List<String> tList= PStringUtils.fastSplit(temp);
+                        tem = tList.toArray(new String[tList.size()]);
+                        if(!tem[0].startsWith("__")){
+                            if(!nameSet.contains(tem[0])){
+                                nameList.add(tem[0]);
+                            }
+                            nameSet.add(tem[0]);
+//                          int index1=nameList.indexOf(tem[0]);
+                            count[rowN][list.indexOf(f)]=Integer.parseInt(tem[1]);
+                            rowN++;
+                        }
+                    }
+
+                }
+                catch (Exception ex) {
+                    System.out.println(tem[0]+"\t"+geneSet.size()+"\t1234");
+                    ex.printStackTrace();
+
+                }
+            });
+            File subDir = new File (this.outputDirS,subDirS[3]);
+            String outputFileS = new File (subDir,fileList[i].get(0).getName().split("_")[length]+"_raw_countResult.txt").getAbsolutePath();
+            try{
+                StringBuilder sb = new StringBuilder();
+                BufferedWriter bw = IOUtils.getTextWriter(new File (outputFileS).getAbsolutePath());
+                sb.append("Gene"+"\t");
+                for(int j=0;j<fileList[i].size();j++){
+                    sb.append(fileList[i].get(j).getName().replaceAll("_RawCount.txt", "")+"\t");
+                }
+                bw.write(sb.toString().replaceAll("\\s+$", ""));
+                bw.newLine();
+                for(int k=0;k<count.length;k++){
+                    sb = new StringBuilder();
+                    for(int j=0;j<fileList[i].size();j++){
+                        if(j==0){
+                            sb.append(nameList.get(k)+"\t");
+                        }
+                        sb.append(count[k][j]+"\t");
+                    }
+                    bw.write(sb.toString().replaceAll("\\s+$", ""));
+                    bw.newLine();
+                }
+
+                bw.flush();
+                bw.close();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     private void mkPosGeneMap () {
         String geneNameS=null;int gfIndex=0;
         try{
@@ -657,7 +925,8 @@ public class SiPASProfile {
     }
 
     public static void main(String args[]) {
-        new SiPASProfile (args[0]);
+        new SiPASUMIProfile (args[0]);
 //        new sampleParse(args[0]);
     }
 }
+
