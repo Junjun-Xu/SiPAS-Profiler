@@ -5,8 +5,7 @@
  
 ## Authors
 
-Jun Xu (junxu1048@genetics.ac.cn)<sup> 1,2 </sup>,Fei Lu (flu@genetics.ac.cn)<sup> 1,3 </sup>,Song Xu (sxu@genetics.ac.cn)<sup> 1,2
-
+Jun Xu (junxu1048@genetics.ac.cn)<sup> 1,2 </sup>, Song Xu (sxu@genetics.ac.cn)<sup> 1,2, Fei Lu (flu@genetics.ac.cn)<sup> 1,3 </sup>
 ## Affiliations
 
 <sup> 1 </sup>  State Key Laboratory of Plant Cell and Chromosome Engineering , Institute of Genetics and Developmental Biology, The Innovative Academy of Seed Design, Chinese Academy of Sciences
