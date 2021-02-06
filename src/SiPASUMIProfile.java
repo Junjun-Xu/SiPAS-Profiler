@@ -32,6 +32,11 @@ import java.util.*;
  * @author xujun
  */
 public class SiPASUMIProfile {
+    //Index position of STAT. If it is empty, it will generate starLib filr in the output directory.
+    String indexPosition = null;
+    //Use which function.-p means parse samples,-a means alignmnt, -c means count, -m means get a count table of expresion.
+    String function = null;
+    // The mode of alignment. PE or SE. The default is PE mode.
     // The mode of alignment. PE or SE. The default is PE mode.
     String alignType=null;
     //The multimap number.If the value is 10. It means that if the read map to more than 10 position, it will be discarded. Default is 2.
@@ -75,30 +80,46 @@ public class SiPASUMIProfile {
     public SiPASUMIProfile(String arg) {
         this.parseParameters(arg);
         this.processTaxaAndBarcode();
-//        starLib=new File("/data1/home/junxu/eQTL/phenotype/starLib1.1").getAbsoluteFile();
-        File starLib=new File(this.outputDirS,"starLib").getAbsoluteFile();
-        if(!starLib.exists()){
+        File index=new File(this.indexPosition).getAbsoluteFile();
+        if(!index.exists()){
             this.mkIndexOfReference();
         }else{
-            File Genome=new File(this.outputDirS,"starLib/Genome").getAbsoluteFile();
+            File Genome=new File(this.indexPosition,"/Genome").getAbsoluteFile();
             if(!Genome.exists()){
                 this.mkIndexOfReference();
             }
         }
         if(alignType=="SE"){
-            this.SEParse();
-            this.starAlignmentSE();
-            this.HTSeqCountSE();
+            if (this.function.contains("-p")){
+                this.SEParse();
+            }
+            if (this.function.contains("-a")){
+                this.starAlignmentSE();
+            }
+            if (this.function.contains("-c")){
+                this.annotatedBAM();
+                this.removeDuplicate();
+                this.HTSeqCount();
+            }
         }else{
-            this.PEParse();
-            this.starAlignmentPE();
-            this.annotatedBAM();
-            this.removeDuplicate();
-            this.HTSeqCountPE();
-
+            if(this.function.contains("-p")){
+                this.PEParse();
+            }
+            if (this.function.contains("-a")){
+                this.starAlignmentPE();
+            }
+            if (this.function.contains("-c")){
+                this.annotatedBAM();
+                this.removeDuplicate();
+                this.HTSeqCount();
+            }
         }
-        this.countTable();
-        this.countUMITable();
+        if (this.function.contains("-m")){
+            this.countTable();
+        }
+        if (this.function.contains("-um")){
+            this.countUMITable();
+        }
     }
     private void SEParse () {
         long startTimePoint = System.nanoTime();
@@ -416,7 +437,7 @@ public class SiPASUMIProfile {
         int count=0;
         List<File> fSet1 = new ArrayList(Arrays.asList());
         for(int i=0;i<fList.size();i++){
-            if((i+1)/10==count && i!=fList.size()-1){//实现了n个同时跑
+            if((i+1)/3==count && i!=fList.size()-1){//实现了n个同时跑
                 fSet1.add(fList.get(i));
             }else{
                 fSet1.add(fList.get(i));
@@ -474,7 +495,7 @@ public class SiPASUMIProfile {
         List<File> fList = Arrays.asList(fs);
         int count=0;List<File> fL1 = new ArrayList(Arrays.asList());
         for(int i=0;i<fList.size();i++){
-            if((i+1)/10==count && i!=fList.size()-1){//实现了同时跑10个
+            if((i+1)/3==count && i!=fList.size()-1){//实现了同时跑10个
                 fL1.add(fList.get(i));
             }else{
                 fL1.add(fList.get(i));
@@ -502,7 +523,7 @@ public class SiPASUMIProfile {
             }
         }
     }
-    public void HTSeqCountPE(){
+    public void HTSeqCount(){
         String inputDirS = new File (this.outputDirS, subDirS[1]).getAbsolutePath();
         File[] fs = new File(inputDirS).listFiles();
         List<File> fList = new ArrayList(Arrays.asList());
@@ -519,7 +540,7 @@ public class SiPASUMIProfile {
                 fL1.add(fList.get(i));
                 fL1.parallelStream().forEach(f -> {
                     StringBuilder sb = new StringBuilder();
-                    sb.append("htseq-count").append(" -f bam -m intersection-nonempty -s reverse ");
+                    sb.append("htseq-count").append(" -f bam -m intersection-nonempty -s no ");
                     sb.append(f);
                     sb.append(" "+this.geneAnnotationFileS).append(" > ");
                     if(f.getName().contains("UMI.bam")){
@@ -527,41 +548,6 @@ public class SiPASUMIProfile {
                     }else{
                         sb.append(f.getName().replace("Aligned.out.bam", "RawCount.txt"));
                     }
-                    String command = sb.toString();
-                    System.out.println(command);
-                    try {
-                        File dir = new File(new File (this.outputDirS,subDirS[2]).getAbsolutePath());
-                        String []cmdarry ={"/bin/bash","-c",command};
-                        Process p=Runtime.getRuntime().exec(cmdarry,null,dir);
-                        p.waitFor();
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    System.out.println("Finished"+f);
-                });
-                count++;
-                fL1.clear();
-            }
-        }
-    }
-    public void HTSeqCountSE(){
-        String inputDirS = new File (this.outputDirS, subDirS[1]).getAbsolutePath();
-        File[] fs = new File(inputDirS).listFiles();
-        fs = IOUtils.listFilesEndsWith(fs, "UMI.bam");
-        List<File> fList = Arrays.asList(fs);
-        int count=0;List<File> fL1 = new ArrayList(Arrays.asList());
-        for(int i=0;i<fList.size();i++){
-            if((i+1)/10==count && i!=fList.size()-1){//实现了同时跑10个HTSeq
-                fL1.add(fList.get(i));
-            }else{
-                fL1.add(fList.get(i));
-                fL1.parallelStream().forEach(f -> {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("htseq-count").append(" -f bam -m intersection-nonempty -s no ");
-                    sb.append(f);
-                    sb.append(" "+this.geneAnnotationFileS).append(" >> ");
-                    sb.append(f.getName().replace("UMI.bam", "Count.txt"));
                     String command = sb.toString();
                     System.out.println(command);
                     try {
@@ -860,27 +846,29 @@ public class SiPASUMIProfile {
             e.printStackTrace();
             System.exit(1);
         }
-        this.alignType=pLineList.get(0);
-        if(!pLineList.get(1).equals("")){
-            this.multiMapN=Integer.parseInt(pLineList.get(1));
+        this.indexPosition=pLineList.get(0);
+        this.function=pLineList.get(1);
+        this.alignType=pLineList.get(2);
+        if(!pLineList.get(3).equals("")){
+            this.multiMapN=Integer.parseInt(pLineList.get(3));
         }else{
             this.multiMapN=2;
         }
-        if(!pLineList.get(2).equals("")){
-            this.mismatchRate=Float.parseFloat(pLineList.get(2));
+        if(!pLineList.get(4).equals("")){
+            this.mismatchRate=Float.parseFloat(pLineList.get(4));
         }else{
             this.mismatchRate=(float)0.1;
         }
-        if(!pLineList.get(3).equals("")){
-            this.minNMatch=Integer.parseInt(pLineList.get(3));
+        if(!pLineList.get(5).equals("")){
+            this.minNMatch=Integer.parseInt(pLineList.get(5));
         }else{
             this.minNMatch=80;
         }
-        this.sampleInformationFileS = pLineList.get(4);
-        this.outputDirS = pLineList.get(5);
-        this.geneAnnotationFileS=pLineList.get(6);
-        this.referenceGenomeFileS=pLineList.get(7);
-        this.starPath=pLineList.get(8);
+        this.sampleInformationFileS = pLineList.get(6);
+        this.outputDirS = pLineList.get(7);
+        this.geneAnnotationFileS=pLineList.get(8);
+        this.referenceGenomeFileS=pLineList.get(9);
+        this.starPath=pLineList.get(10);
         for (int i = 0; i < this.subDirS.length; i++) {
             new File(this.outputDirS, subDirS[i]).mkdir();
         }

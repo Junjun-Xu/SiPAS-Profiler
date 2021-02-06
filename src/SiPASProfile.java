@@ -29,6 +29,10 @@ import utils.PStringUtils;
  * @author xujun
  */
 public class SiPASProfile {
+    //Index position of STAT. If it is empty, it will generate starLib filr in the output directory.
+    String indexPosition = null;
+    //Use which function.-p means parse samples,-a means alignmnt, -c means count, -m means get a count table of expresion.
+    String function = null;
     // The mode of alignment. PE or SE. The default is PE mode.
     String alignType=null;
     //The multimap number.If the value is 10. It means that if the read map to more than 10 position, it will be discarded. Default is 2.
@@ -69,25 +73,39 @@ public class SiPASProfile {
     public SiPASProfile(String arg) {
         this.parseParameters(arg);
         this.processTaxaAndBarcode();
-        File starLib=new File(this.outputDirS,"starLib").getAbsoluteFile();
-        if(!starLib.exists()){
+        File index=new File(this.indexPosition).getAbsoluteFile();
+        if(!index.exists()){
             this.mkIndexOfReference();
         }else{
-            File Genome=new File(this.outputDirS,"starLib/Genome").getAbsoluteFile();
+            File Genome=new File(this.indexPosition,"/Genome").getAbsoluteFile();
             if(!Genome.exists()){
                 this.mkIndexOfReference();
             }
         }
         if(alignType=="SE"){
-            this.SEParse();
-            this.starAlignmentSE();
-            this.HTSeqCountSE();
+            if (this.function.contains("-p")){
+                this.SEParse();
+            }
+            if (this.function.contains("-a")){
+                this.starAlignmentSE();
+            }
+            if (this.function.contains("-c")){
+                this.HTSeqCount();
+            }
         }else{
-            this.PEParse();
-            this.starAlignmentPE();
-            this.HTSeqCountPE();
+            if(this.function.contains("-p")){
+                this.PEParse();
+            }
+            if (this.function.contains("-a")){
+                this.starAlignmentPE();
+            }
+            if (this.function.contains("-c")){
+                this.HTSeqCount();
+            }
         }
-        this.countTable();
+        if (this.function.contains("-m")){
+            this.countTable();
+        }
     }
     private void SEParse () {
         long startTimePoint = System.nanoTime();
@@ -283,7 +301,7 @@ public class SiPASProfile {
         String subFqDirS = new File (this.outputDirS, subDirS[0]).getAbsolutePath();
         File[] fs = new File(subFqDirS).listFiles();
         List<File> fList = new ArrayList(Arrays.asList());
-        fs = IOUtils.listFilesEndsWith(fs, ".fq");
+        fs = IOUtils.listFilesEndsWith(fs, ".fq.gz");
         HashSet<String> nameSet = new HashSet();
         for (int i = 0; i < fs.length; i++) {
             if (fs[i].isHidden()) continue;
@@ -291,12 +309,13 @@ public class SiPASProfile {
         }
         int numCores = Runtime.getRuntime().availableProcessors();
         nameSet.stream().forEach(f ->{
-            String infile1 = new File (subFqDirS,f+"R1.fq").getAbsolutePath();
-            String infile2 = new File (subFqDirS,f+"R2.fq").getAbsolutePath();
+            String infile1 = new File (subFqDirS,f+"R1.fq.gz").getAbsolutePath();
+            String infile2 = new File (subFqDirS,f+"R2.fq.gz").getAbsolutePath();
             StringBuilder sb = new StringBuilder();
             sb.append(this.starPath).append(" --runThreadN ").append(numCores);
-            sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
-            sb.append(" --genomeLoad LoadAndKeep");
+//            sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
+            sb.append(" --genomeDir ").append(new File("/data1/home/junxu/rice/starLib/").getAbsolutePath());
+            sb.append(" --genomeLoad LoadAndKeep --readFilesCommand zcat");
             sb.append(" --readFilesIn ").append(infile1+" "+infile2);
             sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
                 .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
@@ -371,32 +390,7 @@ public class SiPASProfile {
         System.out.println(time.toString());
 
     }
-    public void HTSeqCountPE(){
-        String inputDirS = new File (this.outputDirS, subDirS[1]).getAbsolutePath();
-        File[] fs = new File(inputDirS).listFiles();
-        fs = IOUtils.listFilesEndsWith(fs, "Aligned.out.sam");
-        List<File> fList = Arrays.asList(fs);
-        fList.stream().forEach(f -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append("htseq-count").append(" -m intersection-nonempty -s reverse ");
-            sb.append(f);
-            sb.append(" "+this.geneAnnotationFileS).append(" >> ");
-            sb.append(f.getName().replace("Aligned.out.sam", "Count.txt"));
-            String command = sb.toString();
-            System.out.println(command);
-            try {
-                File dir = new File(new File (this.outputDirS,subDirS[2]).getAbsolutePath());
-                String []cmdarry ={"/bin/bash","-c",command};
-                Process p=Runtime.getRuntime().exec(cmdarry,null,dir);
-                p.waitFor();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            System.out.println("Finished"+f);
-        });
-    }
-    public void HTSeqCountSE(){
+    public void HTSeqCount(){
         String inputDirS = new File (this.outputDirS, subDirS[1]).getAbsolutePath();
         File[] fs = new File(inputDirS).listFiles();
         fs = IOUtils.listFilesEndsWith(fs, "Aligned.out.sam");
@@ -405,7 +399,7 @@ public class SiPASProfile {
             StringBuilder sb = new StringBuilder();
             sb.append("htseq-count").append(" -m intersection-nonempty -s no ");
             sb.append(f);
-            sb.append(" "+this.geneAnnotationFileS).append(" >> ");
+            sb.append(" "+this.geneAnnotationFileS).append(" > ");
             sb.append(f.getName().replace("Aligned.out.sam", "Count.txt"));
             String command = sb.toString();
             System.out.println(command);
@@ -592,27 +586,29 @@ public class SiPASProfile {
             e.printStackTrace();
             System.exit(1);
         }
-        this.alignType=pLineList.get(0);
-        if(!pLineList.get(1).equals("")){
-            this.multiMapN=Integer.parseInt(pLineList.get(1));
+        this.indexPosition=pLineList.get(0);
+        this.function=pLineList.get(1);
+        this.alignType=pLineList.get(2);
+        if(!pLineList.get(3).equals("")){
+            this.multiMapN=Integer.parseInt(pLineList.get(3));
         }else{
             this.multiMapN=2;
         }
-        if(!pLineList.get(2).equals("")){
-            this.mismatchRate=Float.parseFloat(pLineList.get(2));
+        if(!pLineList.get(4).equals("")){
+            this.mismatchRate=Float.parseFloat(pLineList.get(4));
         }else{
             this.mismatchRate=(float)0.1;
         }
-        if(!pLineList.get(3).equals("")){
-            this.minNMatch=Integer.parseInt(pLineList.get(3));
+        if(!pLineList.get(5).equals("")){
+            this.minNMatch=Integer.parseInt(pLineList.get(5));
         }else{
             this.minNMatch=80;
         }
-        this.sampleInformationFileS = pLineList.get(4);
-        this.outputDirS = pLineList.get(5);
-        this.geneAnnotationFileS=pLineList.get(6);
-        this.referenceGenomeFileS=pLineList.get(7);
-        this.starPath=pLineList.get(8);
+        this.sampleInformationFileS = pLineList.get(6);
+        this.outputDirS = pLineList.get(7);
+        this.geneAnnotationFileS=pLineList.get(8);
+        this.referenceGenomeFileS=pLineList.get(9);
+        this.starPath=pLineList.get(10);
         for (int i = 0; i < this.subDirS.length; i++) {
             new File(this.outputDirS, subDirS[i]).mkdir();
         }
