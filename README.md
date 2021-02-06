@@ -73,6 +73,10 @@ Homepage: http://plantgeneticslab.weebly.com/
 #This program is used for gene expression profiling from Simplified Poly(A) Anchored Sequencing (SiPAS)
 #The usage is java -Xms10g -Xmx20g SiPAS-Profiler.jar parameters_SiPAS.txt > log.txt &
 #Please keep the order of following parameters
+#Index position of STAT. If it is empty, it will generate starLib filr in the output directory.
+/data1/home/junxu/starLib
+#Use which function.-p means parse samples,-a means alignmnt, -c means count, -m means get a raw count table of expresion, -um means get a UMI adjusted count table of expresion.
+-c -m 
 #Mode of alignment. PE or SE. The default is PE mode
 PE
 #Number of loci of multiple alignment. If the value is 10, it means that a read mapping to more than 10 position will be discarded. The default is 2
@@ -126,72 +130,6 @@ PL-BC27    P1    GCTAACGG    /Users/junxu/Documents/analysisL/softwareTest/sipas
 PL-BC28    P1    CATAACCC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
 PL-BC29    P1    TTCCCGCA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
 PL-BC30    P1    AACAGTTG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC31    P1    TAGCTAGC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC32    P1    GCAACTAG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC33    P1    GGTTTCGC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC34    P1    GAGTTACT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC35    P1    TCCAAGTC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC36    P1    TAGCATAC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC37    P1    ATCTAGGA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC38    P1    ATCATGTG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC39    P1    TCTCTAGT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC40    P1    AGGAAGAA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC41    P1    ACGACCTC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC42    P1    ACACGCCA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC43    P1    GTCAAGGT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC44    P1    CTCCCCTT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC45    P1    CGCAAAAT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC46    P1    GTTAGCGT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC47    P1    CCGGTGAA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC48    P1    ATTGTCCT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC49    P1    ACTGACTT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC50    P1    CGAGTAAA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC51    P1    TTACCGTG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC52    P1    CCAGATAC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC53    P1    GGTGATCT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC54    P1    TTTCTCCC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC55    P1    GACTCCCA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC56    P1    CTTTCCCT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC57    P1    CTACTGAC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC58    P1    GTGGGACT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC59    P1    CTAGCATC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC60    P1    TATCGGTC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC61    P1    TGCAGCTG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC62    P1    CAGGCGTA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC63    P1    TGCTTAAC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC64    P1    GTGTACAC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC65    P1    TTGCGGAT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC66    P1    TCATTGGA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC67    P1    GTACCCAC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC68    P1    GAATTGTG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC69    P1    CAGTTCGG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC70    P1    AGATGCTA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC71    P1    ATTGTGGC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC72    P1    ATGTAACC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC73    P1    CATGCCTT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC74    P1    CCTCTTAG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC75    P1    TACGAGCA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC76    P1    GGAAATTG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC77    P1    GCAAGACG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC78    P1    ACTTTGCG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC79    P1    GTGTGCTA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC80    P1    TGTTACGT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC81    P1    CTGAGACG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC82    P1    CCAGGCAA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC83    P1    GTCGCACA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC84    P1    GTCGACGA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC85    P1    GCCATTGG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC86    P1    GAGACCGA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC87    P1    GCGCCTTA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC88    P1    TTCAGTCC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC89    P1    CTTAGGCA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC90    P1    TCCTGTCA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC91    P1    AAGAGAGG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC92    P1    TCGTTAAG    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC93    P1    TGTCCCCA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC94    P1    CACATTCC    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC95    P1    CGGTGATA    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
-PL-BC96    P1    ACGACTGT    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R1.fq.gz    /Users/junxu/Documents/analysisL/softwareTest/sipas/input/sub1-1_R2.fq.gz
 ```
 
 ##### 3.Run SiPAS from command line
