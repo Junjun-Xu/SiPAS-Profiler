@@ -121,7 +121,7 @@ public class SiPASProfile {
             HashMap<String, BufferedWriter> barcodeWriterMap = new HashMap<>();
             for (int i = 0; i < subFqFileS.length; i++) {
                 String taxon = btMap.get(barcodeList.get(i));
-                subFqFileS[i] = new File(subFqDirS, taxon+"_R2.fq").getAbsolutePath();
+                subFqFileS[i] = new File(subFqDirS, taxon+"_R2.fq.gz").getAbsolutePath();
                 bws[i] = IOUtils.getTextWriter(subFqFileS[i]);
                 barcodeWriterMap.put(barcodeList.get(i), bws[i]);
             }
@@ -349,7 +349,7 @@ public class SiPASProfile {
         String subFqDirS = new File (this.outputDirS, subDirS[0]).getAbsolutePath();
         File[] fs = new File(subFqDirS).listFiles();
         List<File> fList = new ArrayList(Arrays.asList());
-        fs = IOUtils.listFilesEndsWith(fs, ".fq");
+        fs = IOUtils.listFilesEndsWith(fs, ".fq.gz");
         HashSet<String> nameSet = new HashSet();
         for (int i = 0; i < fs.length; i++) {
             if (fs[i].isHidden()) continue;
@@ -357,11 +357,11 @@ public class SiPASProfile {
         }
         int numCores = Runtime.getRuntime().availableProcessors();
         nameSet.stream().forEach(f -> {
-            String infile2 = new File (subFqDirS,f+"R2.fq").getAbsolutePath();
+            String infile2 = new File (subFqDirS,f+"R2.fq.gz").getAbsolutePath();
             StringBuilder sb = new StringBuilder();
             sb.append(this.starPath).append(" --runThreadN ").append(numCores);
             sb.append(" --genomeDir ").append(new File(this.outputDirS,"starLib").getAbsolutePath());
-            sb.append(" --genomeLoad LoadAndKeep");
+            sb.append(" --genomeLoad LoadAndKeep --readFilesCommand zcat");
             sb.append(" --readFilesIn ").append(infile2);
             sb.append(" --outFileNamePrefix ").append(new File(new File(this.outputDirS, subDirS[1]).getAbsolutePath(), f)
                 .getAbsolutePath()).append(" --outFilterMultimapNmax ").append(this.multiMapN);
